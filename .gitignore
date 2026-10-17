@@ -1,0 +1,59 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Sanal ortamlar (Virtual Environments)
+.venv/
+venv/
+ENV/
+env/
+
+# Çevrimdışı konuşma tanıma modelleri (Repoya EKLENMEZ)
+models/
+*.zip
+*.tar.gz
+
+# Ortam değişkenleri ve yerel ayarlar (Repoya EKLENMEZ)
+.env
+config.local.json
+
+# Lider ve Ekip Üyesi yerel kimlik/not dosyaları (Repoya EKLENMEZ)
+.leader.local.md
+.team-member.local.md
+
+# Liderin yerel yönetim/planlama belgeleri (Repoya EKLENMEZ)
+BILKOD_Proje3_*
+BILKOD_Proje_3_*
+Proje3_5_Haftalik_Cizelge.txt
+
+# GİZLİLİK KURALI: Ham ses kayıtları diske ve repoya YAZILMAZ
+# Yalnızca liderin eklediği izinli test fixture WAV dosyalarına izin verilir
+*.wav
+*.pcm
+*.raw
+!fixtures/audio/*.wav
+
+# IDE ve İşletim Sistemi
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+*.log

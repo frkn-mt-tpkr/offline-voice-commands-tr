@@ -1,0 +1,31 @@
+{
+  "sample_rate": 16000,
+  "channels": 1,
+  "sample_width_bytes": 2,
+  "fixtures": [
+    {
+      "filename": "cmd_dinlemeyi_durdur.wav",
+      "expected_raw": "Dinlemeyi durdur",
+      "expected_normalized": "dinlemeyi durdur",
+      "expected_command_id": "stop_listening",
+      "requires_confirmation": false,
+      "should_match": true
+    },
+    {
+      "filename": "cmd_metni_kaydet.wav",
+      "expected_raw": "Metni kaydet",
+      "expected_normalized": "metni kaydet",
+      "expected_command_id": "save_text",
+      "requires_confirmation": true,
+      "should_match": true
+    },
+    {
+      "filename": "unknown_bilgisayari_kapat.wav",
+      "expected_raw": "Bilgisayarı kapat",
+      "expected_normalized": "bilgisayarı kapat",
+      "expected_command_id": null,
+      "requires_confirmation": false,
+      "should_match": false
+    }
+  ]
+}

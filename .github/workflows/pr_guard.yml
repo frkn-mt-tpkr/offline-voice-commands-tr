@@ -1,0 +1,101 @@
+name: PR Ownership & Security Guard
+
+on:
+  pull_request:
+    branches:
+      - main
+      - "week/**"
+
+jobs:
+  verify-pr:
+    name: Klasör Sahipliği, Dal Hedefi ve Güvenlik Kontrolü
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Dal Hedefi ve Klasör Sahipliği Kontrolü (K1 / K2 / K3)
+        env:
+          PR_AUTHOR: ${{ github.event.pull_request.user.login }}
+          HEAD_REF: ${{ github.head_ref }}
+          BASE_REF: ${{ github.base_ref }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          python - << 'EOF'
+          import os, subprocess, sys
+
+          author = os.environ.get("PR_AUTHOR", "")
+          head_ref = os.environ.get("HEAD_REF", "")
+          base_ref = os.environ.get("BASE_REF", "")
+          base_sha = os.environ.get("BASE_SHA", "")
+          head_sha = os.environ.get("HEAD_SHA", "")
+
+          leader = "frkn-mt-tpkr"
+          member_rules = {
+              "e1": {
+                  "user": "TheletterM16",
+                  "allowed_prefixes": ("audio/", "docs/audio/", "docs/evidence/"),
+              },
+              "e2": {
+                  "user": "omerkonacoglu",
+                  "allowed_prefixes": ("recognition/", "docs/recognition/", "docs/evidence/"),
+              },
+              "e3": {
+                  "user": "iremsutavuz26",
+                  "allowed_prefixes": ("commands/", "ui/", "assets/ui/", "docs/interaction/", "docs/evidence/"),
+              },
+          }
+
+          print(f"PR Sahibi : @{author}")
+          print(f"Kaynak Dal: {head_ref} -> Hedef Dal: {base_ref}")
+
+          # Lider kendi entegrasyon PR'larını (week/X -> main dahil) açabilir
+          if author.lower() == leader.lower() and head_ref.startswith("week/"):
+              print("Lider haftalık entegrasyon PR'ı doğrulandı.")
+              sys.exit(0)
+
+          # Katılımcı doğrudan main dalına PR açamaz
+          if base_ref == "main" and author.lower() != leader.lower():
+              print("HATA: Katılımcı PR'ları doğrudan 'main' dalına açılamaz! Lütfen hedefi 'week/X' (örn. week/1) yapın.")
+              sys.exit(1)
+
+          # Hangi rol olduğunu dal adından (e1/, e2/, e3/) veya kullanıcı adından bul
+          role = None
+          for r_key, info in member_rules.items():
+              if head_ref.startswith(f"{r_key}/") or author.lower() == info["user"].lower():
+                  role = r_key
+                  break
+
+          if role is None:
+              if author.lower() == leader.lower():
+                  print("Lider PR'ı: Klasör kısıtlaması uygulanmadı.")
+                  sys.exit(0)
+              print(f"HATA: Dal adı 'e1/', 'e2/' veya 'e3/' ile başlamalıdır (Mevcut: {head_ref}).")
+              sys.exit(1)
+
+          allowed = member_rules[role]["allowed_prefixes"]
+          diff_out = subprocess.check_output(["git", "diff", "--name-only", f"{base_sha}...{head_sha}"], text=True)
+          changed_files = [line.strip() for line in diff_out.splitlines() if line.strip()]
+
+          print(f"Değiştirilen dosyalar ({role}): {changed_files}")
+          violations = [f for f in changed_files if not f.startswith(allowed)]
+          if violations:
+              print("HATA: İzinli klasör sınırları dışındaki dosyalara dokunuldu!")
+              print(f"İzinli klasörler ({role}): {allowed}")
+              print(f"İhlal edilen dosyalar   : {violations}")
+              sys.exit(1)
+
+          print("Klasör sahipliği ve dal hedefi kontrolü BAŞARILI.")
+          EOF
+
+      - name: Sözleşme ve Güvenlik Taraması Testleri
+        run: |
+          python -m unittest discover -s tests/integration -p "test_*.py" -v

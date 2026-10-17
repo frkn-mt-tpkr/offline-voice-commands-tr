@@ -1,0 +1,28 @@
+# BİLKOD Proje 3 — Klasör Sahipliği (CODEOWNERS)
+# Varsayılan sahip ve tüm ortak/çekirdek dosyalar: Proje Lideri
+*                       @frkn-mt-tpkr
+/app.py                 @frkn-mt-tpkr
+/requirements.txt       @frkn-mt-tpkr
+/config.example.json    @frkn-mt-tpkr
+/README.md              @frkn-mt-tpkr
+/LEADER.md              @frkn-mt-tpkr
+/TEAM_MEMBER.md         @frkn-mt-tpkr
+/contracts/             @frkn-mt-tpkr
+/core/                  @frkn-mt-tpkr
+/fixtures/              @frkn-mt-tpkr
+/tests/                 @frkn-mt-tpkr
+/.github/               @frkn-mt-tpkr
+
+# K1 (e1) — Mikrofon ve Ses
+/audio/                 @TheletterM16 @frkn-mt-tpkr
+/docs/audio/            @TheletterM16 @frkn-mt-tpkr
+
+# K2 (e2) — Çevrimdışı Konuşma Tanıma
+/recognition/           @omerkonacoglu @frkn-mt-tpkr
+/docs/recognition/      @omerkonacoglu @frkn-mt-tpkr
+
+# K3 (e3) — Güvenli Komut ve Arayüz
+/commands/              @iremsutavuz26 @frkn-mt-tpkr
+/ui/                    @iremsutavuz26 @frkn-mt-tpkr
+/assets/ui/             @iremsutavuz26 @frkn-mt-tpkr
+/docs/interaction/      @iremsutavuz26 @frkn-mt-tpkr

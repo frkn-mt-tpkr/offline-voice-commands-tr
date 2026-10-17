@@ -1,0 +1,42 @@
+{
+  "allowed_phrases": [
+    {
+      "input": "Dinlemeyi durdur!",
+      "normalized": "dinlemeyi durdur",
+      "command_id": "stop_listening",
+      "requires_confirmation": false
+    },
+    {
+      "input": "SON CÜMLEYİ SİL.",
+      "normalized": "son cümleyi sil",
+      "command_id": "delete_last_sentence",
+      "requires_confirmation": false
+    },
+    {
+      "input": "  Metni   Temizle... ",
+      "normalized": "metni temizle",
+      "command_id": "clear_text",
+      "requires_confirmation": true
+    },
+    {
+      "input": "İsmail değil, METNİ KAYDET",
+      "normalized_note": "Özel İ/I testi için aşağıdaki unknown listesine bakınız",
+      "input_exact": "METNİ KAYDET",
+      "normalized": "metni kaydet",
+      "command_id": "save_text",
+      "requires_confirmation": true
+    }
+  ],
+  "rejected_unknown_phrases_10": [
+    "bilgisayarı kapat",
+    "dosyayı sil",
+    "internete bağlan",
+    "uygulamayı kapat",
+    "tüm metni hemen sil",
+    "metni masaüstüne kaydet",
+    "dinlemeyi başlat",
+    "son kelimeyi sil",
+    "komut çalıştır",
+    "merhaba nasılsın"
+  ]
+}

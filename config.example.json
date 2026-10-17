@@ -1,0 +1,10 @@
+{
+  "model_path": "models/vosk-model-small-tr-0.3",
+  "sample_rate": 16000,
+  "channels": 1,
+  "frame_duration_ms": 100,
+  "queue_max_frames": 50,
+  "min_confidence": 0.65,
+  "default_command_mode": false,
+  "use_fake_providers_by_default": false
+}

@@ -1,0 +1,9 @@
+# BİLKOD Proje 3 - Konuşmayı Yazıya ve Güvenli Komuta Dönüştürme
+# Python 3.10+ (Önerilen: Python 3.12)
+# Tkinter Python standart kütüphanesi ile birlikte gelir.
+
+# Çevrimdışı Türkçe konuşma tanıma motoru (Apache 2.0)
+vosk==0.3.45
+
+# PortAudio tabanlı mikrofon yakalama kütüphanesi
+sounddevice==0.5.1
