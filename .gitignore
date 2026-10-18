@@ -35,7 +35,9 @@ models/
 .env
 config.local.json
 
-# Lider ve Ekip Üyesi yerel kimlik/not dosyaları (Repoya EKLENMEZ)
+# Lider ve Ekip Üyesi rehberleri ve yerel not dosyaları (Repoya EKLENMEZ)
+LEADER.md
+TEAM_MEMBER.md
 .leader.local.md
 .team-member.local.md
 
