@@ -8,5 +8,10 @@ Model yolu sabit yazılmaz; yapılandırmadan okunur.
 """
 
 from recognition.fake_recognizer import FakeSpeechRecognizer, normalize_turkish_text
+from recognition.vosk_recognizer import VoskSpeechRecognizer
 
-__all__ = ["FakeSpeechRecognizer", "normalize_turkish_text"]
+__all__ = [
+    "FakeSpeechRecognizer",
+    "VoskSpeechRecognizer",
+    "normalize_turkish_text",
+]
