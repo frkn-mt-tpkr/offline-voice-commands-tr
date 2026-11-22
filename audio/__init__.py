@@ -6,6 +6,7 @@ GİZLİLİK KURALI:
 Mikrofondan alınan ham ses verisi varsayılan olarak diske (.wav / .pcm) YAZILMAZ.
 """
 
+from audio.capture import MicrophoneAudioSource
 from audio.fake_source import FakeAudioSource
 
-__all__ = ["FakeAudioSource"]
+__all__ = ["FakeAudioSource", "MicrophoneAudioSource"]
