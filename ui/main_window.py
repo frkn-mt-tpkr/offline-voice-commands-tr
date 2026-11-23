@@ -39,6 +39,7 @@ class MainWindow:
         self._state = ListeningState.IDLE
         self._command_mode_var = tk.BooleanVar(value=False)
         self._status_var = tk.StringVar(value="Durum: Hazır (Mikrofon Kapalı)")
+        self._mode_status_var = tk.StringVar(value="Çalışma modu: Dikte (komutlar kapalı)")
         self._partial_var = tk.StringVar(value="Kısmi metin: —")
         self._test_input_var = tk.StringVar(value="dinlemeyi durdur")
 
@@ -79,10 +80,11 @@ class MainWindow:
 
         self.mode_check = ttk.Checkbutton(
             header_frame,
-            text="Komut Modu Açık (Kapalıyken yalnızca dikte yapılır)",
+            text="Komut Modu",
             variable=self._command_mode_var,
+            command=self._update_mode_status,
         )
-        self.mode_check.grid(row=1, column=0, columnspan=3, sticky=tk.W, pady=(8, 0))
+        self.mode_check.grid(row=1, column=0, columnspan=2, sticky=tk.W, pady=(8, 0))
 
         self.status_label = ttk.Label(
             header_frame,
@@ -90,6 +92,11 @@ class MainWindow:
             font=("Segoe UI", 9, "bold"),
         )
         self.status_label.grid(row=1, column=3, sticky=tk.E, pady=(8, 0))
+        ttk.Label(
+            header_frame,
+            textvariable=self._mode_status_var,
+            foreground="#444444",
+        ).grid(row=2, column=0, columnspan=4, sticky=tk.W, pady=(4, 0))
 
         # Kısmi ve Nihai Metin Alanı
         text_frame = ttk.LabelFrame(container, text="Çevrimdışı Türkçe Metin Ekranı", padding=10)
@@ -152,36 +159,59 @@ class MainWindow:
     def _handle_test_phrase(self) -> None:
         phrase = self._test_input_var.get().strip()
         if not phrase:
+            self.append_log("[BİLGİ] Eşleşmeyi denetlemek için bir test ifadesi yazın.")
             return
         self.append_final_text(phrase)
-        if self._on_test_phrase is not None:
-            intent = self._on_test_phrase(phrase, self._command_mode_var.get())
-            if intent.matched:
-                self.append_log(
-                    f"[EŞLEŞTİ] '{phrase}' -> {intent.command_id.value if intent.command_id else ''} "
-                    f"(Onay gerekir: {'Evet' if intent.requires_confirmation else 'Hayır'})"
-                )
-            else:
-                self.append_log(f"[REDDEDİLDİ] '{phrase}' -> {intent.reason}")
+        if self._on_test_phrase is None:
+            self.append_log(
+                "[TEST YAPILAMADI] Eşleşme denetimi için test sağlayıcısı bağlı değil; "
+                "hiçbir işlem yapılmadı."
+            )
+            return
+
+        intent = self._on_test_phrase(phrase, self._command_mode_var.get())
+        if intent.matched:
+            command_id = intent.command_id.value if intent.command_id else "—"
+            self.append_log(
+                f"[EŞLEŞTİ, ÇALIŞTIRILMADI] '{phrase}' -> {command_id} "
+                f"(Onay gerekir: {'Evet' if intent.requires_confirmation else 'Hayır'})"
+            )
+        else:
+            self.append_log(f"[REDDEDİLDİ] '{phrase}' -> {intent.reason}")
+
+    def _update_mode_status(self) -> None:
+        if self._command_mode_var.get():
+            self._mode_status_var.set("Çalışma modu: Komut (yalnızca izinli ifadeler eşleşir)")
+        else:
+            self._mode_status_var.set("Çalışma modu: Dikte (komutlar kapalı)")
 
     def set_listening_state(self, state: ListeningState, message: Optional[str] = None) -> None:
         self._state = state
+        status_messages = {
+            ListeningState.IDLE: "Durum: Hazır (Mikrofon Kapalı)",
+            ListeningState.LISTENING: "Durum: Dinleniyor (Mikrofon Açık)",
+            ListeningState.PROCESSING: "Durum: Metin işleniyor",
+            ListeningState.AWAITING_CONFIRMATION: "Durum: Onay bekleniyor",
+            ListeningState.ERROR: "Durum: Hata",
+        }
+        active_states = {
+            ListeningState.LISTENING,
+            ListeningState.PROCESSING,
+            ListeningState.AWAITING_CONFIRMATION,
+        }
+        self.start_btn.configure(state=tk.DISABLED if state in active_states else tk.NORMAL)
+        self.stop_btn.configure(state=tk.NORMAL if state in active_states else tk.DISABLED)
+        status_text = message or status_messages[state]
+        self._status_var.set(status_text)
+
         if state == ListeningState.LISTENING:
-            self.start_btn.configure(state=tk.DISABLED)
-            self.stop_btn.configure(state=tk.NORMAL)
-            self._status_var.set(message or "Durum: Dinleniyor (Mikrofon Açık)")
             self.append_log("Mikrofon dinlemesi başlatıldı.")
         elif state == ListeningState.IDLE:
-            self.start_btn.configure(state=tk.NORMAL)
-            self.stop_btn.configure(state=tk.DISABLED)
-            self._status_var.set(message or "Durum: Hazır (Mikrofon Kapalı)")
             self.append_log("Mikrofon dinlemesi durduruldu.")
         elif state == ListeningState.ERROR:
-            self.start_btn.configure(state=tk.NORMAL)
-            self.stop_btn.configure(state=tk.DISABLED)
-            self._status_var.set(message or "Durum: Hata")
-            if message:
-                self.append_log(f"[HATA] {message}")
+            self.append_log(f"[HATA] {status_text}")
+        else:
+            self.append_log(f"[DURUM] {status_text}")
 
     def set_partial_text(self, text: str) -> None:
         self._partial_var.set(f"Kısmi metin: {text or '—'}")

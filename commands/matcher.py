@@ -68,5 +68,5 @@ class AllowlistCommandMatcher:
             command_id=spec.command_id,
             requires_confirmation=spec.requires_confirmation,
             confidence=confidence,
-            reason=f"İzinli komut eşleşti: {spec.phrase}",
+            reason=f"İzinli komut eşleşti; Hafta 1 kapsamında çalıştırılmadı: {spec.phrase}",
         )
