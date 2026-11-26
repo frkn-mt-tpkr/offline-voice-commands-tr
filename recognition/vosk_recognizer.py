@@ -34,6 +34,8 @@ except Exception:  # pragma: no cover
     Model = None  # type: ignore[assignment]
     _VOSK_AVAILABLE = False
 
+_DEFAULT_RELATIVE_MODEL_DIR = os.path.join("models", "vosk-model-small-tr-0.3")
+
 
 class VoskSpeechRecognizer:
     """SpeechRecognizerProtocol sözleşmesini uygulayan gerçek Vosk çevrimdışı konuşma tanıyıcı."""
@@ -47,13 +49,14 @@ class VoskSpeechRecognizer:
         self._model_path: str = (
             model_path
             if model_path is not None
-            else os.environ.get("VOSK_MODEL_PATH", "")
+            else os.environ.get("VOSK_MODEL_PATH", _DEFAULT_RELATIVE_MODEL_DIR)
         )
         self._sample_rate: int = sample_rate
         self._min_confidence: float = min_confidence
         self._model: Any = None
         self._recognizer: Any = None
         self._loaded: bool = False
+        self._last_partial_text: str = ""
 
     @property
     def is_loaded(self) -> bool:
@@ -70,12 +73,14 @@ class VoskSpeechRecognizer:
             self._loaded = False
             self._model = None
             self._recognizer = None
+            self._last_partial_text = ""
             return False
 
         if not os.path.isdir(target_path):
             self._loaded = False
             self._model = None
             self._recognizer = None
+            self._last_partial_text = ""
             return False
 
         try:
@@ -86,11 +91,13 @@ class VoskSpeechRecognizer:
             if hasattr(self._recognizer, "SetWords"):
                 self._recognizer.SetWords(True)
             self._loaded = True
+            self._last_partial_text = ""
             return True
         except Exception:
             self._loaded = False
             self._model = None
             self._recognizer = None
+            self._last_partial_text = ""
             return False
 
     def _ensure_model_loaded(self) -> bool:
@@ -153,7 +160,10 @@ class VoskSpeechRecognizer:
             and avg_conf < self._min_confidence
         ):
             err_code = ErrorCode.LOW_CONFIDENCE
-            err_msg = "Ses yeterince net anlaşılamadı."
+            err_msg = (
+                f"Ses yeterince net anlaşılamadı "
+                f"(güven={avg_conf:.2f} < eşik={self._min_confidence:.2f})."
+            )
 
         return RecognitionResult(
             text=cleaned_raw,
@@ -174,10 +184,19 @@ class VoskSpeechRecognizer:
 
         try:
             is_endpoint = bool(self._recognizer.AcceptWaveform(frame.pcm_bytes))
+            if not is_endpoint and len(frame.pcm_bytes) < (self._sample_rate // 10) * 2:
+                # Kısa son çerçeve (ör. WAV akışı sonu) sonrasında Kaldi endpoint algılaması için
+                # sessizlik tamponu besle
+                if self._recognizer.AcceptWaveform(b"\x00" * 16000):
+                    is_endpoint = True
             if is_endpoint:
+                self._last_partial_text = ""
                 payload = json.loads(self._recognizer.Result() or "{}")
                 text = str(payload.get("text", "")).strip()
                 if not text:
+                    return None
+                norm_check = self.normalize_turkish(text)
+                if not norm_check.normalized_text:
                     return None
                 confs = self._extract_word_confidences(payload)
                 return self._build_recognition_result(
@@ -191,14 +210,21 @@ class VoskSpeechRecognizer:
 
             partial_payload = json.loads(self._recognizer.PartialResult() or "{}")
             partial_text = str(partial_payload.get("partial", "")).strip()
-            if not partial_text:
+            if not partial_text or partial_text == self._last_partial_text:
                 return None
+
+            norm_partial = self.normalize_turkish(partial_text)
+            if not norm_partial.normalized_text:
+                return None
+
+            self._last_partial_text = partial_text
             return self._build_recognition_result(
                 raw_text=partial_text,
                 is_final=False,
                 confidences=None,
             )
         except Exception as exc:
+            self._last_partial_text = ""
             return RecognitionResult(
                 text="",
                 is_final=True,
@@ -275,7 +301,8 @@ class VoskSpeechRecognizer:
         return normalize_turkish_text(text)
 
     def reset(self) -> None:
-        """Tanıyıcı durumunu sıfırlar."""
+        """Tanıyıcı durumunu ve son kısmi metin tamponunu sıfırlar."""
+        self._last_partial_text = ""
         if self._loaded and self._recognizer is not None:
             if hasattr(self._recognizer, "Reset"):
                 self._recognizer.Reset()
